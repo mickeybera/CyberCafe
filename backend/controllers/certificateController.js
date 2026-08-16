@@ -1,3 +1,4 @@
+
 import Certificate from "../models/Certificate.js";
 import Student from "../models/Student.js";
 import PDFDocument from "pdfkit";
@@ -11,7 +12,6 @@ export const generateCertificate = async (req, res) => {
   try {
     const { studentId, completionDate } = req.body;
 
-    // Check student ID
     if (!studentId) {
       return res.status(400).json({
         success: false,
@@ -19,7 +19,6 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Find student and course
     const student = await Student.findById(studentId).populate("course");
 
     if (!student) {
@@ -29,7 +28,6 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Check course
     if (!student.course) {
       return res.status(400).json({
         success: false,
@@ -37,7 +35,6 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Check course completion
     if (student.status !== "completed") {
       return res.status(400).json({
         success: false,
@@ -46,7 +43,6 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Check if certificate already exists
     const existingCertificate = await Certificate.findOne({
       student: studentId,
     });
@@ -59,19 +55,15 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Determine category
     const category = student.course.category;
 
-    // Certificate prefix
     const prefix =
       category === "computer"
         ? "CTC-COMP"
         : "CTC-TAIL";
 
-    // Current year
     const year = new Date().getFullYear();
 
-    // Count certificates
     const count = await Certificate.countDocuments({
       category,
       certificateNumber: {
@@ -79,12 +71,10 @@ export const generateCertificate = async (req, res) => {
       },
     });
 
-    // Certificate number
     const certificateNumber = `${prefix}-${year}-${String(
       count + 1
     ).padStart(5, "0")}`;
 
-    // Create certificate
     const certificate = await Certificate.create({
       student: student._id,
       certificateNumber,
@@ -95,7 +85,6 @@ export const generateCertificate = async (req, res) => {
       completionDate: completionDate || new Date(),
     });
 
-    // Populate student
     const populatedCertificate =
       await Certificate.findById(certificate._id).populate(
         "student",
@@ -286,7 +275,10 @@ export const downloadCertificatePDF = async (req, res) => {
       });
     }
 
-    // Don't allow revoked certificates
+    // ==========================================
+    // REVOKED CERTIFICATE CHECK
+    // ==========================================
+
     if (certificate.status === "revoked") {
       return res.status(400).json({
         success: false,
@@ -308,7 +300,7 @@ export const downloadCertificatePDF = async (req, res) => {
       "Computer Training  •  Tailoring Training";
 
     // ==========================================
-    // FRONTEND URL
+    // FRONTEND URL CHECK
     // ==========================================
 
     if (!process.env.FRONTEND_URL) {
@@ -333,7 +325,7 @@ export const downloadCertificatePDF = async (req, res) => {
       verificationUrl,
       {
         margin: 1,
-        width: 400,
+        width: 500,
         errorCorrectionLevel: "H",
       }
     );
@@ -386,21 +378,31 @@ export const downloadCertificatePDF = async (req, res) => {
     const pageHeight = 595.28;
 
     // ==========================================
-    // COLORS
+    // COLOR PALETTE
     // ==========================================
 
-    const navy = "#12345B";
-    const blue = "#1D4ED8";
-    const lightBlue = "#EAF2FF";
-    const gold = "#C9A227";
-    const lightGold = "#F7E9B0";
-    const dark = "#1F2937";
+    const navy = "#102A43";
+    const darkNavy = "#0B1F33";
+    const royalBlue = "#2563EB";
+    const blue = "#3B82F6";
+    const paleBlue = "#EAF3FF";
+
+    const gold = "#C79A25";
+    const darkGold = "#9A7416";
+    const paleGold = "#F8EEC8";
+
+    const cream = "#FCFAF3";
+    const white = "#FFFFFF";
+
+    const darkText = "#243447";
     const gray = "#64748B";
+    const lightGray = "#CBD5E1";
 
     // ==========================================
     // BACKGROUND
     // ==========================================
 
+    // Main cream paper
     doc
       .rect(
         0,
@@ -408,46 +410,175 @@ export const downloadCertificatePDF = async (req, res) => {
         pageWidth,
         pageHeight
       )
-      .fill("#FFFFFF");
+      .fill(cream);
 
     // ==========================================
-    // SUBTLE TOP DECORATION
+    // BACKGROUND DESIGN - TOP BLUE SHAPE
     // ==========================================
 
     doc
       .save()
       .opacity(0.08)
+      .fillColor(royalBlue)
+      .moveTo(0, 0)
+      .lineTo(330, 0)
+      .lineTo(0, 205)
+      .closePath()
+      .fill()
+      .restore();
+
+    // ==========================================
+    // BACKGROUND DESIGN - TOP GOLD SHAPE
+    // ==========================================
+
+    doc
+      .save()
+      .opacity(0.10)
+      .fillColor(gold)
+      .moveTo(0, 0)
+      .lineTo(190, 0)
+      .lineTo(0, 120)
+      .closePath()
+      .fill()
+      .restore();
+
+    // ==========================================
+    // BACKGROUND DESIGN - BOTTOM BLUE SHAPE
+    // ==========================================
+
+    doc
+      .save()
+      .opacity(0.07)
+      .fillColor(royalBlue)
+      .moveTo(pageWidth, pageHeight)
+      .lineTo(pageWidth - 350, pageHeight)
+      .lineTo(pageWidth, pageHeight - 210)
+      .closePath()
+      .fill()
+      .restore();
+
+    // ==========================================
+    // BACKGROUND DESIGN - BOTTOM GOLD SHAPE
+    // ==========================================
+
+    doc
+      .save()
+      .opacity(0.08)
+      .fillColor(gold)
+      .moveTo(pageWidth, pageHeight)
+      .lineTo(pageWidth - 200, pageHeight)
+      .lineTo(pageWidth, pageHeight - 125)
+      .closePath()
+      .fill()
+      .restore();
+
+    // ==========================================
+    // LARGE WATERMARK CIRCLE
+    // ==========================================
+
+    doc
+      .save()
+      .opacity(0.045)
+      .lineWidth(12)
+      .strokeColor(royalBlue)
       .circle(
         pageWidth / 2,
-        110,
-        180
+        292,
+        155
       )
-      .fill(blue)
+      .stroke()
       .restore();
 
     doc
       .save()
-      .opacity(0.05)
+      .opacity(0.035)
+      .lineWidth(3)
+      .strokeColor(gold)
       .circle(
         pageWidth / 2,
-        pageHeight - 60,
-        150
+        292,
+        137
       )
-      .fill(gold)
+      .stroke()
       .restore();
 
     // ==========================================
-    // OUTER BORDER
+    // WATERMARK STAR / SEAL
+    // ==========================================
+
+    const drawStar = (
+      centerX,
+      centerY,
+      outerRadius,
+      innerRadius,
+      points
+    ) => {
+      const path = [];
+
+      for (let i = 0; i < points * 2; i++) {
+        const angle =
+          -Math.PI / 2 +
+          (i * Math.PI) / points;
+
+        const radius =
+          i % 2 === 0
+            ? outerRadius
+            : innerRadius;
+
+        path.push({
+          x:
+            centerX +
+            Math.cos(angle) * radius,
+          y:
+            centerY +
+            Math.sin(angle) * radius,
+        });
+      }
+
+      doc
+        .save()
+        .moveTo(path[0].x, path[0].y);
+
+      for (let i = 1; i < path.length; i++) {
+        doc.lineTo(
+          path[i].x,
+          path[i].y
+        );
+      }
+
+      doc
+        .closePath()
+        .fillColor(royalBlue)
+        .fill()
+        .restore();
+    };
+
+    doc
+      .save()
+      .opacity(0.025);
+
+    drawStar(
+      pageWidth / 2,
+      292,
+      105,
+      78,
+      16
+    );
+
+    doc.restore();
+
+    // ==========================================
+    // OUTER NAVY BORDER
     // ==========================================
 
     doc
-      .lineWidth(7)
+      .lineWidth(8)
       .strokeColor(navy)
       .rect(
-        16,
-        16,
-        pageWidth - 32,
-        pageHeight - 32
+        15,
+        15,
+        pageWidth - 30,
+        pageHeight - 30
       )
       .stroke();
 
@@ -456,13 +587,13 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
-      .lineWidth(2)
+      .lineWidth(2.5)
       .strokeColor(gold)
       .rect(
-        27,
-        27,
-        pageWidth - 54,
-        pageHeight - 54
+        28,
+        28,
+        pageWidth - 56,
+        pageHeight - 56
       )
       .stroke();
 
@@ -472,56 +603,85 @@ export const downloadCertificatePDF = async (req, res) => {
 
     doc
       .lineWidth(1)
-      .strokeColor(blue)
+      .strokeColor(royalBlue)
       .rect(
-        37,
-        37,
-        pageWidth - 74,
-        pageHeight - 74
+        38,
+        38,
+        pageWidth - 76,
+        pageHeight - 76
       )
       .stroke();
 
     // ==========================================
-    // DECORATIVE CORNERS
+    // DECORATIVE CORNER FUNCTION
     // ==========================================
 
-    const cornerSize = 35;
+    const drawCorner = (
+      x,
+      y,
+      horizontal,
+      vertical
+    ) => {
+      doc
+        .save()
+        .lineWidth(2.5)
+        .strokeColor(gold)
+        .moveTo(x, y + vertical * 48)
+        .lineTo(x, y)
+        .lineTo(x + horizontal * 48, y)
+        .stroke()
+        .restore();
 
-    // TOP LEFT
-    doc
-      .lineWidth(3)
-      .strokeColor(gold)
-      .moveTo(40, 85)
-      .lineTo(40, 40)
-      .lineTo(85, 40)
-      .stroke();
+      doc
+        .save()
+        .lineWidth(1)
+        .strokeColor(royalBlue)
+        .moveTo(
+          x + horizontal * 7,
+          y + vertical * 40
+        )
+        .lineTo(
+          x + horizontal * 7,
+          y + vertical * 7
+        )
+        .lineTo(
+          x + horizontal * 40,
+          y + vertical * 7
+        )
+        .stroke()
+        .restore();
+    };
 
-    // TOP RIGHT
-    doc
-      .moveTo(pageWidth - 40, 85)
-      .lineTo(pageWidth - 40, 40)
-      .lineTo(pageWidth - 85, 40)
-      .stroke();
-
-    // BOTTOM LEFT
-    doc
-      .moveTo(40, pageHeight - 85)
-      .lineTo(40, pageHeight - 40)
-      .lineTo(85, pageHeight - 40)
-      .stroke();
-
-    // BOTTOM RIGHT
-    doc
-      .moveTo(pageWidth - 40, pageHeight - 85)
-      .lineTo(pageWidth - 40, pageHeight - 40)
-      .lineTo(pageWidth - 85, pageHeight - 40)
-      .stroke();
+    // Corners
+    drawCorner(40, 40, 1, 1);
+    drawCorner(
+      pageWidth - 40,
+      40,
+      -1,
+      1
+    );
+    drawCorner(
+      40,
+      pageHeight - 40,
+      1,
+      -1
+    );
+    drawCorner(
+      pageWidth - 40,
+      pageHeight - 40,
+      -1,
+      -1
+    );
 
     // ==========================================
-    // SMALL GOLD CORNER DIAMONDS
+    // DECORATIVE CORNER DIAMONDS
     // ==========================================
 
-    const drawDiamond = (x, y, size) => {
+    const drawDiamond = (
+      x,
+      y,
+      size
+    ) => {
       doc
         .save()
         .fillColor(gold)
@@ -535,8 +695,16 @@ export const downloadCertificatePDF = async (req, res) => {
     };
 
     drawDiamond(40, 40, 5);
-    drawDiamond(pageWidth - 40, 40, 5);
-    drawDiamond(40, pageHeight - 40, 5);
+    drawDiamond(
+      pageWidth - 40,
+      40,
+      5
+    );
+    drawDiamond(
+      40,
+      pageHeight - 40,
+      5
+    );
     drawDiamond(
       pageWidth - 40,
       pageHeight - 40,
@@ -544,7 +712,25 @@ export const downloadCertificatePDF = async (req, res) => {
     );
 
     // ==========================================
-    // CENTER HEADER
+    // HEADER WHITE PANEL
+    // ==========================================
+
+    doc
+      .save()
+      .fillColor(white)
+      .opacity(0.88)
+      .roundedRect(
+        105,
+        48,
+        632,
+        72,
+        18
+      )
+      .fill()
+      .restore();
+
+    // ==========================================
+    // CENTER NAME
     // ==========================================
 
     doc
@@ -553,10 +739,10 @@ export const downloadCertificatePDF = async (req, res) => {
       .fontSize(19)
       .text(
         centerName,
-        80,
-        52,
+        115,
+        57,
         {
-          width: pageWidth - 160,
+          width: 612,
           align: "center",
         }
       );
@@ -571,62 +757,65 @@ export const downloadCertificatePDF = async (req, res) => {
       .fontSize(9)
       .text(
         centerAddress,
-        80,
-        78,
+        115,
+        82,
         {
-          width: pageWidth - 160,
+          width: 612,
           align: "center",
         }
       );
 
     // ==========================================
-    // TRAINING TYPE
+    // CENTER CONTACT
     // ==========================================
 
     doc
-      .fillColor(blue)
+      .fillColor(royalBlue)
       .font("Helvetica-Bold")
       .fontSize(8)
       .text(
         centerContact,
-        80,
-        93,
+        115,
+        97,
         {
-          width: pageWidth - 160,
+          width: 612,
           align: "center",
         }
       );
 
     // ==========================================
-    // GOLD DECORATIVE LINE
+    // DECORATIVE HEADER LINE
     // ==========================================
 
     doc
       .lineWidth(2)
       .strokeColor(gold)
-      .moveTo(180, 113)
-      .lineTo(662, 113)
+      .moveTo(195, 125)
+      .lineTo(646, 125)
       .stroke();
 
     doc
-      .lineWidth(1)
-      .strokeColor(lightGold)
-      .moveTo(235, 118)
-      .lineTo(607, 118)
-      .stroke();
+      .fillColor(gold)
+      .circle(190, 125, 3)
+      .fill();
+
+    doc
+      .fillColor(gold)
+      .circle(651, 125, 3)
+      .fill();
 
     // ==========================================
-    // CERTIFICATE HEADING
+    // CERTIFICATE TITLE
     // ==========================================
 
     doc
       .fillColor(navy)
       .font("Helvetica-Bold")
-      .fontSize(29)
+      .fontSize(30)
       .text(
         "CERTIFICATE",
         70,
-        132,
+        140,
         {
           width: pageWidth - 140,
           align: "center",
@@ -644,7 +833,7 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         "OF COMPLETION",
         70,
-        169,
+        178,
         {
           width: pageWidth - 140,
           align: "center",
@@ -653,7 +842,7 @@ export const downloadCertificatePDF = async (req, res) => {
       );
 
     // ==========================================
-    // PRESENTED TO
+    // PRESENTED TEXT
     // ==========================================
 
     doc
@@ -663,7 +852,7 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         "This certificate is proudly presented to",
         70,
-        199,
+        208,
         {
           width: pageWidth - 140,
           align: "center",
@@ -675,13 +864,13 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
-      .fillColor(navy)
+      .fillColor(darkNavy)
       .font("Helvetica-Bold")
-      .fontSize(28)
+      .fontSize(29)
       .text(
         certificate.studentName.toUpperCase(),
         80,
-        222,
+        231,
         {
           width: pageWidth - 160,
           align: "center",
@@ -689,24 +878,24 @@ export const downloadCertificatePDF = async (req, res) => {
       );
 
     // ==========================================
-    // NAME DECORATION
+    // STUDENT NAME ORNAMENT
     // ==========================================
 
     doc
       .lineWidth(2)
       .strokeColor(gold)
-      .moveTo(250, 260)
-      .lineTo(591, 260)
+      .moveTo(245, 269)
+      .lineTo(597, 269)
       .stroke();
 
     doc
       .fillColor(gold)
-      .circle(244, 260, 3)
+      .circle(238, 269, 3)
       .fill();
 
     doc
       .fillColor(gold)
-      .circle(597, 260, 3)
+      .circle(604, 269, 3)
       .fill();
 
     // ==========================================
@@ -720,7 +909,7 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         "for successfully completing the",
         70,
-        277,
+        285,
         {
           width: pageWidth - 140,
           align: "center",
@@ -728,25 +917,45 @@ export const downloadCertificatePDF = async (req, res) => {
       );
 
     // ==========================================
-    // COURSE NAME BACKGROUND
+    // COURSE PANEL
     // ==========================================
 
     doc
       .save()
-      .fillColor(lightBlue)
+      .fillColor(paleBlue)
       .roundedRect(
-        170,
-        300,
-        502,
-        43,
-        10
+        155,
+        307,
+        532,
+        45,
+        12
       )
       .fill()
       .restore();
 
-    // ==========================================
-    // COURSE NAME
-    // ==========================================
+    doc
+      .lineWidth(1.5)
+      .strokeColor(royalBlue)
+      .roundedRect(
+        155,
+        307,
+        532,
+        45,
+        12
+      )
+      .stroke();
+
+    // Gold course accent
+    doc
+      .fillColor(gold)
+      .roundedRect(
+        155,
+        307,
+        7,
+        45,
+        4
+      )
+      .fill();
 
     doc
       .fillColor(navy)
@@ -754,10 +963,10 @@ export const downloadCertificatePDF = async (req, res) => {
       .fontSize(18)
       .text(
         certificate.courseName.toUpperCase(),
-        185,
-        313,
+        175,
+        319,
         {
-          width: 472,
+          width: 492,
           align: "center",
         }
       );
@@ -773,7 +982,7 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         `Course Duration: ${certificate.duration}`,
         70,
-        355,
+        361,
         {
           width: pageWidth - 140,
           align: "center",
@@ -793,32 +1002,41 @@ export const downloadCertificatePDF = async (req, res) => {
     ).toLocaleDateString("en-IN");
 
     // ==========================================
-    // INFORMATION STRIP
+    // INFORMATION CARD
     // ==========================================
 
     doc
       .save()
-      .fillColor("#F8FAFC")
+      .fillColor(white)
+      .opacity(0.94)
       .roundedRect(
         65,
-        388,
-        550,
-        65,
-        8
+        390,
+        555,
+        63,
+        10
       )
       .fill()
       .restore();
 
     doc
       .lineWidth(1)
-      .strokeColor("#E2E8F0")
+      .strokeColor(lightGray)
       .roundedRect(
         65,
-        388,
-        550,
-        65,
-        8
+        390,
+        555,
+        63,
+        10
       )
+      .stroke();
+
+    // Gold top line
+    doc
+      .lineWidth(2)
+      .strokeColor(gold)
+      .moveTo(85, 390)
+      .lineTo(600, 390)
       .stroke();
 
     // ==========================================
@@ -831,18 +1049,18 @@ export const downloadCertificatePDF = async (req, res) => {
       .fontSize(7)
       .text(
         "CERTIFICATE NUMBER",
-        82,
-        402
+        83,
+        404
       );
 
     doc
-      .fillColor(dark)
+      .fillColor(darkText)
       .font("Helvetica-Bold")
       .fontSize(9)
       .text(
         certificate.certificateNumber,
-        82,
-        417
+        83,
+        418
       );
 
     // ==========================================
@@ -856,17 +1074,17 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         "COMPLETION DATE",
         285,
-        402
+        404
       );
 
     doc
-      .fillColor(dark)
+      .fillColor(darkText)
       .font("Helvetica-Bold")
       .fontSize(9)
       .text(
         completionDate,
         285,
-        417
+        418
       );
 
     // ==========================================
@@ -879,33 +1097,34 @@ export const downloadCertificatePDF = async (req, res) => {
       .fontSize(7)
       .text(
         "ISSUE DATE",
-        450,
-        402
+        460,
+        404
       );
 
     doc
-      .fillColor(dark)
+      .fillColor(darkText)
       .font("Helvetica-Bold")
       .fontSize(9)
       .text(
         issueDate,
-        450,
-        417
+        460,
+        418
       );
 
     // ==========================================
-    // QR CODE AREA
+    // QR VERIFICATION CARD
     // ==========================================
 
     doc
       .save()
-      .fillColor("#FFFFFF")
+      .fillColor(white)
+      .opacity(0.97)
       .roundedRect(
         650,
-        372,
-        135,
-        145,
-        10
+        370,
+        137,
+        149,
+        12
       )
       .fill()
       .restore();
@@ -915,12 +1134,49 @@ export const downloadCertificatePDF = async (req, res) => {
       .strokeColor(gold)
       .roundedRect(
         650,
-        372,
-        135,
-        145,
-        10
+        370,
+        137,
+        149,
+        12
       )
       .stroke();
+
+    // QR blue top strip
+    doc
+      .fillColor(navy)
+      .roundedRect(
+        650,
+        370,
+        137,
+        27,
+        12
+      )
+      .fill();
+
+    // Cover lower part of rounded strip
+    doc
+      .fillColor(navy)
+      .rect(
+        650,
+        384,
+        137,
+        13
+      )
+      .fill();
+
+    doc
+      .fillColor(white)
+      .font("Helvetica-Bold")
+      .fontSize(7)
+      .text(
+        "CERTIFICATE VERIFICATION",
+        655,
+        379,
+        {
+          width: 127,
+          align: "center",
+        }
+      );
 
     // ==========================================
     // QR CODE
@@ -928,8 +1184,8 @@ export const downloadCertificatePDF = async (req, res) => {
 
     doc.image(
       qrBuffer,
-      669,
-      390,
+      670,
+      402,
       {
         width: 97,
         height: 97,
@@ -943,13 +1199,13 @@ export const downloadCertificatePDF = async (req, res) => {
     doc
       .fillColor(navy)
       .font("Helvetica-Bold")
-      .fontSize(7.5)
+      .fontSize(7)
       .text(
         "SCAN TO VERIFY",
         660,
-        493,
+        501,
         {
-          width: 115,
+          width: 117,
           align: "center",
         }
       );
@@ -961,33 +1217,33 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         "Digital Verification",
         660,
-        504,
+        511,
         {
-          width: 115,
+          width: 117,
           align: "center",
         }
       );
 
     // ==========================================
-    // SIGNATURE AREA
+    // SIGNATURE SECTION
     // ==========================================
 
     // Left signature
     doc
       .lineWidth(1)
       .strokeColor(navy)
-      .moveTo(95, 493)
-      .lineTo(245, 493)
+      .moveTo(95, 495)
+      .lineTo(245, 495)
       .stroke();
 
     doc
-      .fillColor(dark)
+      .fillColor(darkText)
       .font("Helvetica-Bold")
       .fontSize(8.5)
       .text(
         "Course Instructor",
         95,
-        501,
+        502,
         {
           width: 150,
           align: "center",
@@ -998,18 +1254,18 @@ export const downloadCertificatePDF = async (req, res) => {
     doc
       .lineWidth(1)
       .strokeColor(navy)
-      .moveTo(370, 493)
-      .lineTo(520, 493)
+      .moveTo(370, 495)
+      .lineTo(520, 495)
       .stroke();
 
     doc
-      .fillColor(dark)
+      .fillColor(darkText)
       .font("Helvetica-Bold")
       .fontSize(8.5)
       .text(
         "Authorized Signature",
         370,
-        501,
+        502,
         {
           width: 150,
           align: "center",
@@ -1017,18 +1273,50 @@ export const downloadCertificatePDF = async (req, res) => {
       );
 
     // ==========================================
-    // SMALL GOLD SEPARATORS
+    // GOLD SEAL
     // ==========================================
 
     doc
+      .save()
       .fillColor(gold)
-      .circle(320, 493, 3)
-      .fill();
+      .circle(307, 493, 25)
+      .fill()
+      .restore();
+
+    doc
+      .save()
+      .fillColor(cream)
+      .circle(307, 493, 19)
+      .fill()
+      .restore();
 
     doc
       .fillColor(gold)
-      .circle(350, 493, 3)
-      .fill();
+      .font("Helvetica-Bold")
+      .fontSize(6.5)
+      .text(
+        "CERTIFIED",
+        287,
+        489,
+        {
+          width: 40,
+          align: "center",
+        }
+      );
+
+    doc
+      .fillColor(gold)
+      .font("Helvetica-Bold")
+      .fontSize(5)
+      .text(
+        "TRAINING",
+        287,
+        497,
+        {
+          width: 40,
+          align: "center",
+        }
+      );
 
     // ==========================================
     // FOOTER
@@ -1041,7 +1329,7 @@ export const downloadCertificatePDF = async (req, res) => {
       .text(
         "This certificate is issued upon successful completion of the stated course.",
         70,
-        550,
+        551,
         {
           width: 580,
           align: "center",
@@ -1049,25 +1337,25 @@ export const downloadCertificatePDF = async (req, res) => {
       );
 
     // ==========================================
-    // VERIFICATION TEXT
+    // VERIFICATION FOOTER
     // ==========================================
 
     doc
-      .fillColor(blue)
+      .fillColor(royalBlue)
       .font("Helvetica-Bold")
       .fontSize(6.5)
       .text(
-        "Verify authenticity by scanning the QR code",
+        "Scan the QR code to verify certificate authenticity",
         635,
-        535,
+        540,
         {
-          width: 160,
+          width: 165,
           align: "center",
         }
       );
 
     // ==========================================
-    // FINISH PDF
+    // FINALIZE PDF
     // ==========================================
 
     doc.end();
@@ -1086,3 +1374,4 @@ export const downloadCertificatePDF = async (req, res) => {
     }
   }
 };
+
