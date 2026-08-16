@@ -37,7 +37,7 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Check if course is completed
+    // Check course completion
     if (student.status !== "completed") {
       return res.status(400).json({
         success: false,
@@ -71,7 +71,7 @@ export const generateCertificate = async (req, res) => {
     // Current year
     const year = new Date().getFullYear();
 
-    // Count certificates for this category and year
+    // Count certificates
     const count = await Certificate.countDocuments({
       category,
       certificateNumber: {
@@ -79,7 +79,7 @@ export const generateCertificate = async (req, res) => {
       },
     });
 
-    // Generate certificate number
+    // Certificate number
     const certificateNumber = `${prefix}-${year}-${String(
       count + 1
     ).padStart(5, "0")}`;
@@ -95,7 +95,7 @@ export const generateCertificate = async (req, res) => {
       completionDate: completionDate || new Date(),
     });
 
-    // Populate student information
+    // Populate student
     const populatedCertificate =
       await Certificate.findById(certificate._id).populate(
         "student",
@@ -176,7 +176,6 @@ export const getCertificateById = async (req, res) => {
 // ==========================================
 // VERIFY CERTIFICATE
 // ==========================================
-// Public route
 
 export const verifyCertificate = async (req, res) => {
   try {
@@ -309,7 +308,7 @@ export const downloadCertificatePDF = async (req, res) => {
       "Computer Training  •  Tailoring Training";
 
     // ==========================================
-    // CHECK FRONTEND URL
+    // FRONTEND URL
     // ==========================================
 
     if (!process.env.FRONTEND_URL) {
@@ -334,7 +333,7 @@ export const downloadCertificatePDF = async (req, res) => {
       verificationUrl,
       {
         margin: 1,
-        width: 300,
+        width: 400,
         errorCorrectionLevel: "H",
       }
     );
@@ -377,41 +376,108 @@ export const downloadCertificatePDF = async (req, res) => {
       `attachment; filename="${certificate.certificateNumber}.pdf"`
     );
 
-    // Pipe PDF to browser/Postman
     doc.pipe(res);
 
     // ==========================================
-    // A4 LANDSCAPE SIZE
+    // PAGE SIZE
     // ==========================================
 
     const pageWidth = 841.89;
     const pageHeight = 595.28;
 
     // ==========================================
+    // COLORS
+    // ==========================================
+
+    const navy = "#12345B";
+    const blue = "#1D4ED8";
+    const lightBlue = "#EAF2FF";
+    const gold = "#C9A227";
+    const lightGold = "#F7E9B0";
+    const dark = "#1F2937";
+    const gray = "#64748B";
+
+    // ==========================================
+    // BACKGROUND
+    // ==========================================
+
+    doc
+      .rect(
+        0,
+        0,
+        pageWidth,
+        pageHeight
+      )
+      .fill("#FFFFFF");
+
+    // ==========================================
+    // SUBTLE TOP DECORATION
+    // ==========================================
+
+    doc
+      .save()
+      .opacity(0.08)
+      .circle(
+        pageWidth / 2,
+        110,
+        180
+      )
+      .fill(blue)
+      .restore();
+
+    doc
+      .save()
+      .opacity(0.05)
+      .circle(
+        pageWidth / 2,
+        pageHeight - 60,
+        150
+      )
+      .fill(gold)
+      .restore();
+
+    // ==========================================
     // OUTER BORDER
     // ==========================================
 
     doc
-      .lineWidth(6)
+      .lineWidth(7)
+      .strokeColor(navy)
       .rect(
-        18,
-        18,
-        pageWidth - 36,
-        pageHeight - 36
+        16,
+        16,
+        pageWidth - 32,
+        pageHeight - 32
       )
       .stroke();
 
     // ==========================================
-    // INNER BORDER
+    // GOLD BORDER
     // ==========================================
 
     doc
-      .lineWidth(1.5)
+      .lineWidth(2)
+      .strokeColor(gold)
       .rect(
-        30,
-        30,
-        pageWidth - 60,
-        pageHeight - 60
+        27,
+        27,
+        pageWidth - 54,
+        pageHeight - 54
+      )
+      .stroke();
+
+    // ==========================================
+    // INNER BLUE BORDER
+    // ==========================================
+
+    doc
+      .lineWidth(1)
+      .strokeColor(blue)
+      .rect(
+        37,
+        37,
+        pageWidth - 74,
+        pageHeight - 74
       )
       .stroke();
 
@@ -419,51 +485,78 @@ export const downloadCertificatePDF = async (req, res) => {
     // DECORATIVE CORNERS
     // ==========================================
 
-    // Top-left
+    const cornerSize = 35;
+
+    // TOP LEFT
     doc
-      .moveTo(30, 65)
-      .lineTo(30, 40)
-      .lineTo(55, 40)
-      .lineWidth(2)
+      .lineWidth(3)
+      .strokeColor(gold)
+      .moveTo(40, 85)
+      .lineTo(40, 40)
+      .lineTo(85, 40)
       .stroke();
 
-    // Top-right
+    // TOP RIGHT
     doc
-      .moveTo(pageWidth - 30, 65)
-      .lineTo(pageWidth - 30, 40)
-      .lineTo(pageWidth - 55, 40)
-      .lineWidth(2)
+      .moveTo(pageWidth - 40, 85)
+      .lineTo(pageWidth - 40, 40)
+      .lineTo(pageWidth - 85, 40)
       .stroke();
 
-    // Bottom-left
+    // BOTTOM LEFT
     doc
-      .moveTo(30, pageHeight - 65)
-      .lineTo(30, pageHeight - 40)
-      .lineTo(55, pageHeight - 40)
-      .lineWidth(2)
+      .moveTo(40, pageHeight - 85)
+      .lineTo(40, pageHeight - 40)
+      .lineTo(85, pageHeight - 40)
       .stroke();
 
-    // Bottom-right
+    // BOTTOM RIGHT
     doc
-      .moveTo(pageWidth - 30, pageHeight - 65)
-      .lineTo(pageWidth - 30, pageHeight - 40)
-      .lineTo(pageWidth - 55, pageHeight - 40)
-      .lineWidth(2)
+      .moveTo(pageWidth - 40, pageHeight - 85)
+      .lineTo(pageWidth - 40, pageHeight - 40)
+      .lineTo(pageWidth - 85, pageHeight - 40)
       .stroke();
 
     // ==========================================
-    // CENTER NAME
+    // SMALL GOLD CORNER DIAMONDS
+    // ==========================================
+
+    const drawDiamond = (x, y, size) => {
+      doc
+        .save()
+        .fillColor(gold)
+        .moveTo(x, y - size)
+        .lineTo(x + size, y)
+        .lineTo(x, y + size)
+        .lineTo(x - size, y)
+        .closePath()
+        .fill()
+        .restore();
+    };
+
+    drawDiamond(40, 40, 5);
+    drawDiamond(pageWidth - 40, 40, 5);
+    drawDiamond(40, pageHeight - 40, 5);
+    drawDiamond(
+      pageWidth - 40,
+      pageHeight - 40,
+      5
+    );
+
+    // ==========================================
+    // CENTER HEADER
     // ==========================================
 
     doc
+      .fillColor(navy)
       .font("Helvetica-Bold")
-      .fontSize(21)
+      .fontSize(19)
       .text(
         centerName,
-        70,
-        55,
+        80,
+        52,
         {
-          width: pageWidth - 140,
+          width: pageWidth - 160,
           align: "center",
         }
       );
@@ -473,85 +566,104 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica")
       .fontSize(9)
       .text(
         centerAddress,
-        70,
-        82,
+        80,
+        78,
         {
-          width: pageWidth - 140,
+          width: pageWidth - 160,
           align: "center",
         }
       );
 
     // ==========================================
-    // CENTER CONTACT / COURSE TYPES
+    // TRAINING TYPE
     // ==========================================
 
     doc
+      .fillColor(blue)
+      .font("Helvetica-Bold")
       .fontSize(8)
       .text(
         centerContact,
-        70,
-        96,
+        80,
+        93,
         {
-          width: pageWidth - 140,
+          width: pageWidth - 160,
           align: "center",
         }
       );
 
     // ==========================================
-    // DECORATIVE LINE
+    // GOLD DECORATIVE LINE
     // ==========================================
 
     doc
-      .moveTo(180, 118)
-      .lineTo(662, 118)
+      .lineWidth(2)
+      .strokeColor(gold)
+      .moveTo(180, 113)
+      .lineTo(662, 113)
+      .stroke();
+
+    doc
       .lineWidth(1)
+      .strokeColor(lightGold)
+      .moveTo(235, 118)
+      .lineTo(607, 118)
       .stroke();
 
     // ==========================================
-    // CERTIFICATE TITLE
+    // CERTIFICATE HEADING
     // ==========================================
 
     doc
+      .fillColor(navy)
       .font("Helvetica-Bold")
-      .fontSize(30)
+      .fontSize(29)
       .text(
         "CERTIFICATE",
         70,
-        137,
+        132,
         {
           width: pageWidth - 140,
           align: "center",
         }
       );
 
+    // ==========================================
+    // OF COMPLETION
+    // ==========================================
+
     doc
-      .font("Helvetica")
-      .fontSize(13)
+      .fillColor(gold)
+      .font("Helvetica-Bold")
+      .fontSize(12)
       .text(
         "OF COMPLETION",
         70,
-        174,
+        169,
         {
           width: pageWidth - 140,
           align: "center",
+          characterSpacing: 2,
         }
       );
 
     // ==========================================
-    // PRESENTATION TEXT
+    // PRESENTED TO
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica")
       .fontSize(11)
       .text(
         "This certificate is proudly presented to",
         70,
-        210,
+        199,
         {
           width: pageWidth - 140,
           align: "center",
@@ -563,36 +675,52 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
+      .fillColor(navy)
       .font("Helvetica-Bold")
-      .fontSize(29)
+      .fontSize(28)
       .text(
         certificate.studentName.toUpperCase(),
         80,
-        237,
+        222,
         {
           width: pageWidth - 160,
           align: "center",
         }
       );
 
-    // Student name underline
+    // ==========================================
+    // NAME DECORATION
+    // ==========================================
+
     doc
-      .moveTo(245, 275)
-      .lineTo(597, 275)
-      .lineWidth(1)
+      .lineWidth(2)
+      .strokeColor(gold)
+      .moveTo(250, 260)
+      .lineTo(591, 260)
       .stroke();
 
+    doc
+      .fillColor(gold)
+      .circle(244, 260, 3)
+      .fill();
+
+    doc
+      .fillColor(gold)
+      .circle(597, 260, 3)
+      .fill();
+
     // ==========================================
-    // COURSE TEXT
+    // COURSE INTRODUCTION
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica")
-      .fontSize(11)
+      .fontSize(10.5)
       .text(
         "for successfully completing the",
         70,
-        291,
+        277,
         {
           width: pageWidth - 140,
           align: "center",
@@ -600,18 +728,36 @@ export const downloadCertificatePDF = async (req, res) => {
       );
 
     // ==========================================
+    // COURSE NAME BACKGROUND
+    // ==========================================
+
+    doc
+      .save()
+      .fillColor(lightBlue)
+      .roundedRect(
+        170,
+        300,
+        502,
+        43,
+        10
+      )
+      .fill()
+      .restore();
+
+    // ==========================================
     // COURSE NAME
     // ==========================================
 
     doc
+      .fillColor(navy)
       .font("Helvetica-Bold")
-      .fontSize(22)
+      .fontSize(18)
       .text(
         certificate.courseName.toUpperCase(),
-        120,
-        316,
+        185,
+        313,
         {
-          width: pageWidth - 240,
+          width: 472,
           align: "center",
         }
       );
@@ -621,12 +767,13 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica")
-      .fontSize(10)
+      .fontSize(9.5)
       .text(
         `Course Duration: ${certificate.duration}`,
         70,
-        348,
+        355,
         {
           width: pageWidth - 140,
           align: "center",
@@ -646,25 +793,56 @@ export const downloadCertificatePDF = async (req, res) => {
     ).toLocaleDateString("en-IN");
 
     // ==========================================
+    // INFORMATION STRIP
+    // ==========================================
+
+    doc
+      .save()
+      .fillColor("#F8FAFC")
+      .roundedRect(
+        65,
+        388,
+        550,
+        65,
+        8
+      )
+      .fill()
+      .restore();
+
+    doc
+      .lineWidth(1)
+      .strokeColor("#E2E8F0")
+      .roundedRect(
+        65,
+        388,
+        550,
+        65,
+        8
+      )
+      .stroke();
+
+    // ==========================================
     // CERTIFICATE NUMBER
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica-Bold")
-      .fontSize(8)
+      .fontSize(7)
       .text(
         "CERTIFICATE NUMBER",
-        70,
-        408
+        82,
+        402
       );
 
     doc
-      .font("Helvetica")
+      .fillColor(dark)
+      .font("Helvetica-Bold")
       .fontSize(9)
       .text(
         certificate.certificateNumber,
-        70,
-        423
+        82,
+        417
       );
 
     // ==========================================
@@ -672,21 +850,23 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica-Bold")
-      .fontSize(8)
+      .fontSize(7)
       .text(
         "COMPLETION DATE",
-        300,
-        408
+        285,
+        402
       );
 
     doc
-      .font("Helvetica")
+      .fillColor(dark)
+      .font("Helvetica-Bold")
       .fontSize(9)
       .text(
         completionDate,
-        300,
-        423
+        285,
+        417
       );
 
     // ==========================================
@@ -694,113 +874,168 @@ export const downloadCertificatePDF = async (req, res) => {
     // ==========================================
 
     doc
-      .font("Helvetica-Bold")
-      .fontSize(8)
-      .text(
-        "ISSUE DATE",
-        470,
-        408
-      );
-
-    doc
-      .font("Helvetica")
-      .fontSize(9)
-      .text(
-        issueDate,
-        470,
-        423
-      );
-
-    // ==========================================
-    // QR CODE BOX
-    // ==========================================
-
-    doc
-      .lineWidth(1)
-      .rect(
-        665,
-        390,
-        125,
-        145
-      )
-      .stroke();
-
-    // QR image
-    doc.image(
-      qrBuffer,
-      677,
-      402,
-      {
-        width: 101,
-        height: 101,
-      }
-    );
-
-    // QR label
-    doc
+      .fillColor(gray)
       .font("Helvetica-Bold")
       .fontSize(7)
       .text(
+        "ISSUE DATE",
+        450,
+        402
+      );
+
+    doc
+      .fillColor(dark)
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .text(
+        issueDate,
+        450,
+        417
+      );
+
+    // ==========================================
+    // QR CODE AREA
+    // ==========================================
+
+    doc
+      .save()
+      .fillColor("#FFFFFF")
+      .roundedRect(
+        650,
+        372,
+        135,
+        145,
+        10
+      )
+      .fill()
+      .restore();
+
+    doc
+      .lineWidth(2)
+      .strokeColor(gold)
+      .roundedRect(
+        650,
+        372,
+        135,
+        145,
+        10
+      )
+      .stroke();
+
+    // ==========================================
+    // QR CODE
+    // ==========================================
+
+    doc.image(
+      qrBuffer,
+      669,
+      390,
+      {
+        width: 97,
+        height: 97,
+      }
+    );
+
+    // ==========================================
+    // QR LABEL
+    // ==========================================
+
+    doc
+      .fillColor(navy)
+      .font("Helvetica-Bold")
+      .fontSize(7.5)
+      .text(
         "SCAN TO VERIFY",
-        677,
-        510,
+        660,
+        493,
         {
-          width: 101,
+          width: 115,
+          align: "center",
+        }
+      );
+
+    doc
+      .fillColor(gray)
+      .font("Helvetica")
+      .fontSize(6.5)
+      .text(
+        "Digital Verification",
+        660,
+        504,
+        {
+          width: 115,
           align: "center",
         }
       );
 
     // ==========================================
-    // SIGNATURE 1
+    // SIGNATURE AREA
     // ==========================================
 
+    // Left signature
     doc
-      .moveTo(105, 495)
-      .lineTo(255, 495)
       .lineWidth(1)
+      .strokeColor(navy)
+      .moveTo(95, 493)
+      .lineTo(245, 493)
       .stroke();
 
     doc
-      .font("Helvetica")
-      .fontSize(9)
+      .fillColor(dark)
+      .font("Helvetica-Bold")
+      .fontSize(8.5)
       .text(
         "Course Instructor",
-        105,
-        503,
+        95,
+        501,
         {
           width: 150,
           align: "center",
         }
       );
 
-    // ==========================================
-    // SIGNATURE 2
-    // ==========================================
-
+    // Right signature
     doc
-      .moveTo(380, 495)
-      .lineTo(530, 495)
       .lineWidth(1)
+      .strokeColor(navy)
+      .moveTo(370, 493)
+      .lineTo(520, 493)
       .stroke();
 
     doc
-      .font("Helvetica")
-      .fontSize(9)
+      .fillColor(dark)
+      .font("Helvetica-Bold")
+      .fontSize(8.5)
       .text(
         "Authorized Signature",
-        380,
-        503,
+        370,
+        501,
         {
           width: 150,
           align: "center",
         }
       );
+
+    // ==========================================
+    // SMALL GOLD SEPARATORS
+    // ==========================================
+
+    doc
+      .fillColor(gold)
+      .circle(320, 493, 3)
+      .fill();
+
+    doc
+      .fillColor(gold)
+      .circle(350, 493, 3)
+      .fill();
 
     // ==========================================
     // FOOTER
     // ==========================================
 
     doc
+      .fillColor(gray)
       .font("Helvetica")
       .fontSize(7)
       .text(
@@ -809,6 +1044,24 @@ export const downloadCertificatePDF = async (req, res) => {
         550,
         {
           width: 580,
+          align: "center",
+        }
+      );
+
+    // ==========================================
+    // VERIFICATION TEXT
+    // ==========================================
+
+    doc
+      .fillColor(blue)
+      .font("Helvetica-Bold")
+      .fontSize(6.5)
+      .text(
+        "Verify authenticity by scanning the QR code",
+        635,
+        535,
+        {
+          width: 160,
           align: "center",
         }
       );

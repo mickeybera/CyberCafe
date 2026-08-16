@@ -11,6 +11,11 @@ import {
   FaThumbtack,
   FaCalendarAlt,
   FaFileAlt,
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle,
+  FaLayerGroup,
+  FaRedo,
 } from "react-icons/fa";
 
 import { toast } from "react-hot-toast";
@@ -92,7 +97,7 @@ const Notice = () => {
   };
 
   // ==========================================
-  // FILTER NOTICES
+  // FILTER
   // ==========================================
 
   const filteredNotices = useMemo(() => {
@@ -141,6 +146,28 @@ const Notice = () => {
   ]);
 
   // ==========================================
+  // STATISTICS
+  // ==========================================
+
+  const statistics = useMemo(() => {
+    return {
+      total: notices.length,
+
+      published: notices.filter(
+        (notice) => notice.isPublished
+      ).length,
+
+      open: notices.filter(
+        (notice) => notice.status === "open"
+      ).length,
+
+      closed: notices.filter(
+        (notice) => notice.status === "closed"
+      ).length,
+    };
+  }, [notices]);
+
+  // ==========================================
   // FORMAT DATE
   // ==========================================
 
@@ -158,7 +185,7 @@ const Notice = () => {
   };
 
   // ==========================================
-  // CATEGORY LABEL
+  // CATEGORY
   // ==========================================
 
   const getCategoryLabel = (value) => {
@@ -174,20 +201,61 @@ const Notice = () => {
   };
 
   // ==========================================
-  // STATUS STYLE
+  // STATUS
   // ==========================================
 
-  const getStatusStyle = (statusValue) => {
-    if (statusValue === "open") {
-      return "bg-green-100 text-green-700";
-    }
+  const getStatusInfo = (statusValue) => {
+    switch (statusValue) {
+      case "open":
+        return {
+          label: "Open",
+          icon: FaCheckCircle,
+          className:
+            "bg-emerald-50 text-emerald-700 border-emerald-100",
+        };
 
-    if (statusValue === "closing_soon") {
-      return "bg-yellow-100 text-yellow-700";
-    }
+      case "closing_soon":
+        return {
+          label: "Closing Soon",
+          icon: FaClock,
+          className:
+            "bg-amber-50 text-amber-700 border-amber-100",
+        };
 
-    return "bg-red-100 text-red-700";
+      case "closed":
+        return {
+          label: "Closed",
+          icon: FaTimesCircle,
+          className:
+            "bg-red-50 text-red-700 border-red-100",
+        };
+
+      default:
+        return {
+          label: "Unknown",
+          icon: FaClock,
+          className:
+            "bg-slate-50 text-slate-600 border-slate-200",
+        };
+    }
   };
+
+  // ==========================================
+  // RESET FILTERS
+  // ==========================================
+
+  const resetFilters = () => {
+    setSearch("");
+    setCategory("all");
+    setStatus("all");
+    setPublished("all");
+  };
+
+  const hasFilters =
+    search ||
+    category !== "all" ||
+    status !== "all" ||
+    published !== "all";
 
   // ==========================================
   // LOADING
@@ -195,8 +263,28 @@ const Notice = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+      <div className="min-h-[500px]">
+        <div className="mb-8 h-8 w-52 animate-pulse rounded-lg bg-slate-200" />
+
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="h-28 animate-pulse rounded-2xl bg-slate-200"
+            />
+          ))}
+        </div>
+
+        <div className="mb-6 h-36 animate-pulse rounded-2xl bg-slate-200" />
+
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="h-80 animate-pulse rounded-2xl bg-slate-200"
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -206,27 +294,28 @@ const Notice = () => {
   // ==========================================
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-7xl pb-10">
 
-      {/* ========================================
+      {/* ======================================
           HEADER
-      ======================================== */}
+      ====================================== */}
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-lg shadow-blue-200">
             <FaBullhorn />
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
               Notices
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Manage announcements and important notices
+              Manage announcements and important
+              notifications
             </p>
           </div>
 
@@ -237,7 +326,7 @@ const Notice = () => {
           onClick={() =>
             navigate("/admin/notices/add")
           }
-          className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+          className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
         >
           <FaPlus />
           Add Notice
@@ -245,24 +334,156 @@ const Notice = () => {
 
       </div>
 
-      {/* ========================================
+      {/* ======================================
+          STATISTICS
+      ====================================== */}
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+        {/* TOTAL */}
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Total Notices
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-slate-800">
+                {statistics.total}
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <FaLayerGroup />
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* PUBLISHED */}
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Published
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-slate-800">
+                {statistics.published}
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <FaCheckCircle />
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* OPEN */}
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Active / Open
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-slate-800">
+                {statistics.open}
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <FaClock />
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* CLOSED */}
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Closed
+              </p>
+
+              <p className="mt-2 text-3xl font-bold text-slate-800">
+                {statistics.closed}
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <FaTimesCircle />
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ======================================
           FILTERS
-      ======================================== */}
+      ====================================== */}
 
-      <div className="mb-6 rounded-xl bg-white p-5 shadow-sm">
+      <div className="mb-7 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
 
-        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <FaFilter />
-          Filters
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+          <div className="flex items-center gap-2">
+
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <FaFilter />
+            </div>
+
+            <div>
+              <h2 className="text-sm font-bold text-slate-800">
+                Filter Notices
+              </h2>
+
+              <p className="text-xs text-slate-400">
+                Search and filter your notices
+              </p>
+            </div>
+
+          </div>
+
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+            >
+              <FaRedo />
+              Reset Filters
+            </button>
+          )}
+
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
           {/* SEARCH */}
 
-          <div className="relative">
+          <div className="relative xl:col-span-1">
 
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
 
             <input
               type="text"
@@ -270,8 +491,8 @@ const Notice = () => {
               onChange={(e) =>
                 setSearch(e.target.value)
               }
-              placeholder="Search notice..."
-              className="w-full rounded-lg border border-slate-300 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Search notices..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"
             />
 
           </div>
@@ -283,7 +504,7 @@ const Notice = () => {
             onChange={(e) =>
               setCategory(e.target.value)
             }
-            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"
           >
             <option value="all">
               All Categories
@@ -317,7 +538,7 @@ const Notice = () => {
             onChange={(e) =>
               setStatus(e.target.value)
             }
-            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"
           >
             <option value="all">
               All Status
@@ -343,7 +564,7 @@ const Notice = () => {
             onChange={(e) =>
               setPublished(e.target.value)
             }
-            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"
           >
             <option value="all">
               All Notices
@@ -362,59 +583,84 @@ const Notice = () => {
 
       </div>
 
-      {/* ========================================
-          COUNT
-      ======================================== */}
+      {/* ======================================
+          RESULTS HEADER
+      ====================================== */}
 
-      <div className="mb-4">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
-        <p className="text-sm text-slate-500">
-          Showing{" "}
-          <span className="font-semibold text-slate-700">
-            {filteredNotices.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-700">
-            {notices.length}
-          </span>{" "}
-          notices
-        </p>
+        <div>
+          <h2 className="text-lg font-bold text-slate-800">
+            All Notices
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Showing{" "}
+            <span className="font-semibold text-slate-700">
+              {filteredNotices.length}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-slate-700">
+              {notices.length}
+            </span>{" "}
+            notices
+          </p>
+        </div>
+
+        {hasFilters && (
+          <div className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
+            Filters active
+          </div>
+        )}
 
       </div>
 
-      {/* ========================================
+      {/* ======================================
           EMPTY STATE
-      ======================================== */}
+      ====================================== */}
 
       {filteredNotices.length === 0 ? (
 
-        <div className="rounded-xl bg-white px-6 py-16 text-center shadow-sm">
+        <div className="rounded-2xl border border-slate-100 bg-white px-6 py-20 text-center shadow-sm">
 
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-400">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-3xl text-blue-400">
             <FaBullhorn />
           </div>
 
-          <h2 className="text-lg font-bold text-slate-800">
+          <h2 className="text-xl font-bold text-slate-800">
             No notices found
           </h2>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
             {notices.length === 0
-              ? "You haven't created any notices yet."
-              : "Try changing your search or filters."}
+              ? "You haven't created any notices yet. Create your first notice to keep users informed."
+              : "No notices match your current search or filters. Try changing your filters."}
           </p>
 
-          {notices.length === 0 && (
+          {notices.length === 0 ? (
+
             <button
               type="button"
               onClick={() =>
                 navigate("/admin/notices/add")
               }
-              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               <FaPlus />
               Add Your First Notice
             </button>
+
+          ) : (
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <FaRedo />
+              Clear Filters
+            </button>
+
           )}
 
         </div>
@@ -427,32 +673,45 @@ const Notice = () => {
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 
-          {filteredNotices.map((notice) => (
+          {filteredNotices.map((notice) => {
 
-            <div
-              key={notice._id}
-              className="overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-md"
-            >
+            const statusInfo =
+              getStatusInfo(notice.status);
 
-              {/* CARD HEADER */}
+            const StatusIcon =
+              statusInfo.icon;
 
-              <div className="border-b border-slate-100 p-5">
+            return (
 
-                <div className="mb-3 flex items-start justify-between gap-3">
+              <article
+                key={notice._id}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+              >
 
-                  <div className="flex min-w-0 items-center gap-3">
+                {/* CARD TOP */}
 
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <div className="relative border-b border-slate-100 p-5">
+
+                  {notice.isPinned && (
+                    <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-600">
+                      <FaThumbtack />
+                      Pinned
+                    </div>
+                  )}
+
+                  <div className="mb-4 flex items-start gap-3 pr-16">
+
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
                       <FaBullhorn />
                     </div>
 
                     <div className="min-w-0">
 
-                      <h2 className="text-lg font-bold text-slate-800">
+                      <h3 className="line-clamp-2 text-lg font-bold leading-6 text-slate-800">
                         {notice.title}
-                      </h2>
+                      </h3>
 
-                      <span className="mt-1 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-600">
+                      <span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                         {getCategoryLabel(
                           notice.category
                         )}
@@ -462,185 +721,186 @@ const Notice = () => {
 
                   </div>
 
-                  {notice.isPinned && (
-                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-semibold text-yellow-700">
-                      <FaThumbtack />
-                      Pinned
+                  {/* STATUS */}
+
+                  <div className="flex flex-wrap gap-2">
+
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusInfo.className}`}
+                    >
+                      <StatusIcon />
+                      {statusInfo.label}
                     </span>
-                  )}
+
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                        notice.isPublished
+                          ? "border-blue-100 bg-blue-50 text-blue-700"
+                          : "border-slate-200 bg-slate-50 text-slate-500"
+                      }`}
+                    >
+                      {notice.isPublished
+                        ? "Published"
+                        : "Unpublished"}
+                    </span>
+
+                  </div>
 
                 </div>
 
-                {/* STATUS + PUBLISHED */}
+                {/* CARD BODY */}
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-1 flex-col p-5">
 
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusStyle(
-                      notice.status
-                    )}`}
-                  >
-                    {notice.status ===
-                    "closing_soon"
-                      ? "Closing Soon"
-                      : notice.status
-                          ?.charAt(0)
-                          .toUpperCase() +
-                        notice.status?.slice(1)}
-                  </span>
+                  <p className="line-clamp-3 min-h-[72px] text-sm leading-6 text-slate-600">
+                    {notice.description}
+                  </p>
 
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      notice.isPublished
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {notice.isPublished
-                      ? "Published"
-                      : "Unpublished"}
-                  </span>
+                  {/* DATES */}
 
-                </div>
+                  {(notice.startDate ||
+                    notice.lastDate) && (
 
-              </div>
+                    <div className="mt-5 space-y-2">
 
-              {/* CARD BODY */}
+                      {notice.startDate && (
+                        <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
 
-              <div className="space-y-4 p-5">
+                          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                            <FaCalendarAlt className="text-blue-500" />
+                            Start Date
+                          </div>
 
-                <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-                  {notice.description}
-                </p>
+                          <span className="text-xs font-bold text-slate-700">
+                            {formatDate(
+                              notice.startDate
+                            )}
+                          </span>
 
-                {/* DATES */}
+                        </div>
+                      )}
 
-                <div className="space-y-2 text-sm">
+                      {notice.lastDate && (
+                        <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
 
-                  {notice.startDate && (
-                    <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                            <FaCalendarAlt className="text-red-500" />
+                            Last Date
+                          </div>
 
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <FaCalendarAlt className="text-blue-500" />
-                        Start Date
-                      </div>
+                          <span className="text-xs font-bold text-slate-700">
+                            {formatDate(
+                              notice.lastDate
+                            )}
+                          </span>
 
-                      <span className="font-medium text-slate-700">
-                        {formatDate(
-                          notice.startDate
-                        )}
-                      </span>
-
-                    </div>
-                  )}
-
-                  {notice.lastDate && (
-                    <div className="flex items-center justify-between">
-
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <FaCalendarAlt className="text-red-500" />
-                        Last Date
-                      </div>
-
-                      <span className="font-medium text-slate-700">
-                        {formatDate(
-                          notice.lastDate
-                        )}
-                      </span>
-
-                    </div>
-                  )}
-
-                </div>
-
-                {/* REQUIRED DOCUMENTS */}
-
-                {notice.requiredDocuments?.length >
-                  0 && (
-                  <div>
-
-                    <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                      <FaFileAlt className="text-blue-500" />
-                      Required Documents
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-
-                      {notice.requiredDocuments
-                        .slice(0, 4)
-                        .map(
-                          (
-                            document,
-                            index
-                          ) => (
-                            <span
-                              key={`${document}-${index}`}
-                              className="rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600"
-                            >
-                              {document}
-                            </span>
-                          )
-                        )}
-
-                      {notice.requiredDocuments
-                        .length > 4 && (
-                        <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
-                          +
-                          {notice
-                            .requiredDocuments
-                            .length - 4}{" "}
-                          more
-                        </span>
+                        </div>
                       )}
 
                     </div>
-
-                  </div>
-                )}
-
-              </div>
-
-              {/* CARD FOOTER */}
-
-              <div className="flex gap-3 border-t border-slate-100 bg-slate-50 p-4">
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/admin/notices/${notice._id}`
-                    )
-                  }
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                >
-                  <FaEdit />
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDelete(notice)
-                  }
-                  disabled={
-                    deletingId === notice._id
-                  }
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {deletingId === notice._id ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
-                  ) : (
-                    <FaTrash />
                   )}
 
-                  Delete
-                </button>
+                  {/* DOCUMENTS */}
 
-              </div>
+                  {notice.requiredDocuments?.length >
+                    0 && (
 
-            </div>
+                    <div className="mt-5">
 
-          ))}
+                      <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-600">
+                        <FaFileAlt className="text-blue-500" />
+                        Required Documents
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+
+                        {notice.requiredDocuments
+                          .slice(0, 3)
+                          .map(
+                            (
+                              document,
+                              index
+                            ) => (
+                              <span
+                                key={`${document}-${index}`}
+                                className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+                              >
+                                {document}
+                              </span>
+                            )
+                          )}
+
+                        {notice.requiredDocuments
+                          .length > 3 && (
+                          <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-600">
+                            +
+                            {notice
+                              .requiredDocuments
+                              .length - 3}{" "}
+                            more
+                          </span>
+                        )}
+
+                      </div>
+
+                    </div>
+                  )}
+
+                </div>
+
+                {/* CARD FOOTER */}
+
+                <div className="grid grid-cols-2 gap-2 border-t border-slate-100 bg-slate-50 p-4">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(
+                        `/admin/notices/${notice._id}`
+                      )
+                    }
+                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                  >
+                    <FaEdit />
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDelete(notice)
+                    }
+                    disabled={
+                      deletingId ===
+                      notice._id
+                    }
+                    className="flex items-center justify-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-xs font-bold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+
+                    {deletingId ===
+                    notice._id ? (
+
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-200 border-t-red-600" />
+
+                    ) : (
+
+                      <FaTrash />
+
+                    )}
+
+                    {deletingId ===
+                    notice._id
+                      ? "Deleting..."
+                      : "Delete"}
+
+                  </button>
+
+                </div>
+
+              </article>
+
+            );
+          })}
 
         </div>
       )}
