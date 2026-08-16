@@ -195,7 +195,7 @@ const Home = () => {
                   onClick={() =>
                     navigate("/notices")
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
+                  className="hover:cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
                 >
                   View Latest Notices
 
@@ -209,7 +209,7 @@ const Home = () => {
                   onClick={() =>
                     navigate("/courses")
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
+                  className="hover:cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
                 >
                   Explore Courses
 
@@ -223,7 +223,7 @@ const Home = () => {
                   onClick={() =>
                     navigate("/admin/login")
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
+                  className="hover:cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
                 >
                   Admin Login
 
@@ -547,7 +547,7 @@ const Home = () => {
               onClick={() =>
                 navigate("/notices")
               }
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              className="hover:cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               View All Notices
 
@@ -700,7 +700,7 @@ const Home = () => {
                             `/notices/${notice._id}`
                           )
                         }
-                        className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-blue-600 transition group-hover:gap-3 hover:text-blue-700"
+                        className="hover:cursor-pointer mt-5 inline-flex items-center gap-2 text-sm font-bold text-blue-600 transition group-hover:gap-3 hover:text-blue-700"
                       >
 
                         View Full Notice
@@ -869,7 +869,7 @@ const Home = () => {
                   onClick={() =>
                     navigate("/notices")
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-bold text-blue-700 transition hover:bg-blue-50"
+                  className="hover:cursor-pointer line-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-bold text-blue-700 transition hover:bg-blue-50"
                 >
 
                   Check Notices
@@ -883,7 +883,7 @@ const Home = () => {
                   onClick={() =>
                     navigate("/courses")
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/20"
+                  className="hover:cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/20"
                 >
 
                   Browse Courses
@@ -897,7 +897,7 @@ const Home = () => {
                   onClick={() =>
                     navigate("/admin/login")
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/20"
+                  className="hover:cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/20"
                 >
 
                   Admin Login
